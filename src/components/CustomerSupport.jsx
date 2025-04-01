@@ -23,8 +23,22 @@ axios.interceptors.response.use(
         console.log('Response received:', response.config.url);
         return response;
     },
-    error => {
+    async error => {
         console.error('Response error:', error.response || error);
+        
+        // If the error is a network error or timeout, retry the request
+        if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED') {
+            const config = error.config;
+            if (!config._retry) {
+                config._retry = true;
+                try {
+                    return await axios(config);
+                } catch (retryError) {
+                    return Promise.reject(retryError);
+                }
+            }
+        }
+        
         return Promise.reject(error);
     }
 );
@@ -35,6 +49,7 @@ const CustomerSupport = () => {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [threadId, setThreadId] = useState(null);
+    const [error, setError] = useState(null);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
@@ -44,18 +59,22 @@ const CustomerSupport = () => {
         setInputMessage('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
         setIsLoading(true);
+        setError(null);
 
         try {
             console.log('Sending message to:', `${import.meta.env.VITE_API_URL}/api/chat`);
             const response = await axios.post('/api/chat', {
                 message: userMessage,
                 threadId
+            }, {
+                timeout: 30000 // 30 second timeout
             });
 
             setMessages(prev => [...prev, { role: 'assistant', content: response.data.message }]);
             setThreadId(response.data.threadId);
         } catch (error) {
             console.error('Error sending message:', error.response?.data || error.message);
+            setError('Sorry, I encountered an error. Please try again later. If the problem persists, please contact support.');
             setMessages(prev => [...prev, { 
                 role: 'assistant', 
                 content: 'Sorry, I encountered an error. Please try again later. If the problem persists, please contact support.' 
