@@ -3,7 +3,7 @@ import { FaComments, FaTimes } from 'react-icons/fa';
 import axios from 'axios';
 
 // Configure axios base URL
-axios.defaults.baseURL = 'http://localhost:3000';
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 const CustomerSupport = () => {
     const [isOpen, setIsOpen] = useState(false);
