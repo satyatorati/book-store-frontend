@@ -10,8 +10,7 @@ const AllBooks = () => {
     useEffect(() => {
         const fetchBooks = async () => {
             try {
-                // Using the correct API URL with port 3000
-                const response = await axios.get('http://localhost:3000/api/books');
+                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/books`);
                 console.log('API Response:', response.data); // Debug log
                 
                 if (Array.isArray(response.data)) {
@@ -61,7 +60,7 @@ const AllBooks = () => {
             <div className="container mx-auto px-4 py-12">
                 <div className="text-center py-8">
                     <p className="text-red-500">{error}</p>
-                    <p className="text-sm text-gray-500 mt-2">Please make sure the backend server is running on port 3000</p>
+                    <p className="text-sm text-gray-500 mt-2">Please try again later</p>
                 </div>
             </div>
         );
