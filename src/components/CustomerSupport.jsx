@@ -5,6 +5,30 @@ import axios from 'axios';
 // Configure axios base URL
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
+// Add request interceptor for better error handling
+axios.interceptors.request.use(
+    config => {
+        console.log('Making request to:', config.url);
+        return config;
+    },
+    error => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
+);
+
+// Add response interceptor for better error handling
+axios.interceptors.response.use(
+    response => {
+        console.log('Response received:', response.config.url);
+        return response;
+    },
+    error => {
+        console.error('Response error:', error.response || error);
+        return Promise.reject(error);
+    }
+);
+
 const CustomerSupport = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [inputMessage, setInputMessage] = useState('');
@@ -22,6 +46,7 @@ const CustomerSupport = () => {
         setIsLoading(true);
 
         try {
+            console.log('Sending message to:', `${import.meta.env.VITE_API_URL}/api/chat`);
             const response = await axios.post('/api/chat', {
                 message: userMessage,
                 threadId
@@ -33,7 +58,7 @@ const CustomerSupport = () => {
             console.error('Error sending message:', error.response?.data || error.message);
             setMessages(prev => [...prev, { 
                 role: 'assistant', 
-                content: error.response?.data?.message || 'Sorry, I encountered an error. Please try again later.' 
+                content: 'Sorry, I encountered an error. Please try again later. If the problem persists, please contact support.' 
             }]);
         } finally {
             setIsLoading(false);
